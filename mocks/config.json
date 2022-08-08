@@ -1,0 +1,10 @@
+{
+  "xAxis": {
+    "type": "value",
+    "prefix": "$"
+  },
+  "value": {
+    "prefix": "$",
+    "suffix": "MM"
+  }
+}
