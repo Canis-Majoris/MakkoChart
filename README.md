@@ -1,5 +1,5 @@
 # MakkoChart
 
-./custom for testing outside of Looker environment
+./custom for testing outside Looker environment
 
 index.ts as an entry point
