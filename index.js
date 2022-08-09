@@ -481,12 +481,8 @@ class MakkoChart {
       .attr('fill', (d) => d.color);
 
     // create Tooltip
-    const tooltipContainer = document.createElement('div');
-    tooltipContainer.id = 'tooltip';
 
-    document.querySelector('#chart')?.append(tooltipContainer);
-
-    this.tooltip = new Tooltip(tooltipContainer, rowsSections, value);
+    this.tooltip = new Tooltip(document.querySelector('#chart'), rowsSections, value);
   }
 }
 
