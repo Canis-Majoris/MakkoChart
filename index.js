@@ -318,6 +318,8 @@ class MakkoChart {
       .text((d, i, cols) => {
         const el = cols[i].parentElement.getBoundingClientRect();
 
+        console.log(el, i, cols)
+
         if (el.width < 50) return ''
 
         return (`${getSectionLabel(d.key, data)} (${getPercent(d.sum, sum)}%, ${getValueFormatted(d.sum, value)})`)
