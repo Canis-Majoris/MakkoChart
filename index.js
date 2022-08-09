@@ -154,7 +154,17 @@ class Tooltip {
 
       const maxWidth = container.clientWidth - 60
 
-      const { clientWidth, clientHeight } = tooltip.node()
+      const newCintent = document.createElement('div')
+
+      newCintent.innerHTML = `
+        <div>
+          <h3 class="tooltip-title">${d.segmentLabel}</h3>
+          <h4 class="tooltip-subtitle">${d.label}</h4>
+          <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(d.value, valueConfig)}</p>
+        </div>
+      `
+
+      const { clientWidth, clientHeight } = newCintent
 
       const xOffset = d3.pointer(e)[0] + Number(offset)
       const yOffset = d3.pointer(e)[1]
@@ -163,13 +173,7 @@ class Tooltip {
       const yOffsetCorrection = yOffset - clientHeight + 20 < 0 ? -clientHeight + 100 : -50;
 
       tooltip
-        .html(`
-                <div>
-                    <h3 class="tooltip-title">${d.segmentLabel}</h3>
-                    <h4 class="tooltip-subtitle">${d.label}</h4>
-                    <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(d.value, valueConfig)}</p>
-                </div>
-            `)
+        .html(newCintent)
         .style("transform", `translate3d(${xOffset + xOffsetCorrection}px, ${yOffset + yOffsetCorrection}px, 0)`);
     };
 
