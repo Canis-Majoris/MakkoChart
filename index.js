@@ -439,7 +439,7 @@ const vis = {
         }
     `;
 
-    element.appendChild(css);
+    element.prependChild(css);
 
     // add chart
     this.makkoChart = new MakkoChart();
