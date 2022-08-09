@@ -497,8 +497,12 @@ const vis = {
   options: {},
   // set up the initial state of the visualization
   create(element, config) {
-    element.innerHTML = `
-    <style>
+    const container = element.appendChild(document.createElement("div"));
+    container.setAttribute("id", "chart");
+
+    const css = document.createElement("style");
+    css.setAttribute("type", "text/css")
+    css.innerHTML = `
         .wrapper {
           position: relative;
           font-family: system-ui, sans-serif;
@@ -562,8 +566,9 @@ const vis = {
           font-weight: 600;
           font-size: 12px;
         }
-      </style>
     `;
+
+    element.appendChild(css);
 
     // add chart
     this.makkoChart = new MakkoChart();
