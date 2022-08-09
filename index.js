@@ -160,11 +160,11 @@ class Tooltip {
 
     this.tooltip = tooltip
 
-    mouseover = function () {
+    const mouseover = function () {
       tooltip.style('opacity', 1);
     };
 
-    mousemove = function (e, d) {
+    const mousemove = function (e, d) {
       const offset = d3.select(this).attr("data-offset")
 
       const maxWidth = container.clientWidth - 60
@@ -188,7 +188,7 @@ class Tooltip {
         .style("transform", `translate3d(${xOffset + xOffsetCorrection}px, ${yOffset + yOffsetCorrection}px, 0)`);
     };
 
-    mouseleave = function () {
+    const mouseleave = function () {
       tooltip.style('opacity', 0);
     };
 
