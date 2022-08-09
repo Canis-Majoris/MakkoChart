@@ -363,7 +363,6 @@ const vis = {
     css.innerHTML = `
         .wrapper {
           position: relative;
-          font-family: system-ui, sans-serif;
         }
         
         svg {
@@ -373,6 +372,7 @@ const vis = {
         #chart {
           margin-bottom: 20px;
           overflow: hidden;
+          font-family: system-ui, sans-serif;
         }
         
         .label {
