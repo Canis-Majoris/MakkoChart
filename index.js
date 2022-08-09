@@ -150,51 +150,53 @@ class Tooltip {
   init() {
     d3.select(this.container).selectAll('.tooltip').remove();
 
-    this.tooltip = d3
+    const container = this.container;
+
+    const tooltip = d3
       .select(this.container)
       .append('div')
       .style('opacity', 0)
       .attr('class', 'tooltip');
 
+    this.tooltip = tooltip
+
+    mouseover = function () {
+      tooltip.style('opacity', 1);
+    };
+
+    mousemove = function (e, d) {
+      const offset = d3.select(this).attr("data-offset")
+
+      const maxWidth = container.clientWidth - 60
+
+      const { clientWidth, clientHeight } = tooltip.node()
+
+      const xOffset = d3.pointer(e)[0] + Number(offset)
+      const yOffset = d3.pointer(e)[1]
+
+      const xOffsetCorrection = xOffset + clientWidth > maxWidth ? -clientWidth + 60 : 60;
+      const yOffsetCorrection = yOffset - clientHeight + 20 < 0 ? -clientHeight + 100 : -50;
+
+      tooltip
+        .html(`
+                <div>
+                    <h3 class="tooltip-title">${d.segmentLabel}</h3>
+                    <h4 class="tooltip-subtitle">${d.label}</h4>
+                    <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(d.value, valueConfig)}</p>
+                </div>
+            `)
+        .style("transform", `translate3d(${xOffset + xOffsetCorrection}px, ${yOffset + yOffsetCorrection}px, 0)`);
+    };
+
+    mouseleave = function () {
+      tooltip.style('opacity', 0);
+    };
+
     this.sections
-      .on('mouseover', this.mouseover)
-      .on('mousemove', this.mousemove)
-      .on('mouseleave', this.mouseleave);
+      .on('mouseover', mouseover)
+      .on('mousemove', mousemove)
+      .on('mouseleave', mouseleave);
   }
-
-  mouseover = function () {
-    this.tooltip.style('opacity', 1);
-  };
-
-  mousemove = function (e, d) {
-    const offset = d3.select(this).attr("data-offset")
-
-    console.log('--------------', e, d, this);
-
-    const maxWidth = this.container.clientWidth - 60
-
-    const { clientWidth, clientHeight } = this.tooltip.node()
-
-    const xOffset = d3.pointer(e)[0] + Number(offset)
-    const yOffset = d3.pointer(e)[1]
-
-    const xOffsetCorrection = xOffset + clientWidth > maxWidth ? -clientWidth + 60 : 60;
-    const yOffsetCorrection = yOffset - clientHeight + 20 < 0 ? -clientHeight + 100 : -50;
-
-    this.tooltip
-      .html(`
-            <div>
-                <h3 class="tooltip-title">${d.segmentLabel}</h3>
-                <h4 class="tooltip-subtitle">${d.label}</h4>
-                <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(d.value, valueConfig)}</p>
-            </div>
-        `)
-      .style("transform", `translate3d(${xOffset + xOffsetCorrection}px, ${yOffset + yOffsetCorrection}px, 0)`);
-  };
-
-  mouseleave = function () {
-    this.tooltip.style('opacity', 0);
-  };
 }
 
 
