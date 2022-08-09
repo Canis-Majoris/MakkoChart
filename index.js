@@ -570,7 +570,9 @@ const vis = {
   },
   // render in response to the data or settings changing
   // TODO: arguments to be integrated
-  update(_data, element, _config, queryResponse) {
+  updateAsync(_data, element, _config, queryResponse) {
+
+    console.log('.....................', { _data, element, _config, queryResponse })
     // render chart
     this.makkoChart.render({ data, config, element });
   },
