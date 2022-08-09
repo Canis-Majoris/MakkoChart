@@ -389,6 +389,24 @@ const vis = {
           box-shadow: 1px 1px 7px #00000021;
         }
         
+        .tooltip-title {
+          color: #000000;
+          border-bottom: 1px solid #00000021;
+          padding-bottom: 3px;
+          margin-bottom: 5px;
+          margin-top: 0;
+        }
+        
+        .tooltip-subtitle {
+          margin-top: 0;
+          margin-bottom: 2px;
+          color: #00000086;
+        }
+        
+        .tooltip p {
+          margin: 0;
+        }
+        
         #legend {
           display: flex;
           gap: 15px;
