@@ -1,15 +1,8 @@
-import { Looker, VisualizationDefinition } from './common/types';
 import data from './mocks/data.json';
 import config from './mocks/config.json';
 import MakkoChart from './classes/MakkoChart';
 
-declare var looker: Looker;
-
-interface TreemapVisualization extends VisualizationDefinition {
-  makkoChart?: MakkoChart;
-}
-
-const vis: TreemapVisualization = {
+const vis = {
   id: 'treemap',
   label: 'Treemap',
   options: {},

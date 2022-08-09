@@ -101,7 +101,7 @@ export const getSectionLabel = (sectionKey, data) =>
 
 export const getValueFormatted = (
   value,
-  { prefix, suffix }: { prefix?: string; suffix?: string }
+  { prefix, suffix }
 ) => `${prefix}${value}${suffix}`;
 
 export const getPercent = (value, total) =>

@@ -6,20 +6,17 @@ import {
   getValueFormatted,
 } from '../common/utils';
 import Tooltip from './Tooltip';
-import { ChartConfig } from '../common/types';
 
-export interface IMakkoChart {}
-
-export default class MakkoChart implements IMakkoChart {
-  sections: any;
-  tooltip: Tooltip;
+export default class MakkoChart {
+  sections;
+  tooltip;
 
   render({ data, config, element }) {
     const width = element.clientWidth - 10,
       height = element.clientHeight,
       margin = 30;
 
-    const { xAxis, value }: ChartConfig = config;
+    const { xAxis, value } = config;
 
     d3.select('#chart').selectAll('svg').remove();
 
@@ -106,52 +103,52 @@ export default class MakkoChart implements IMakkoChart {
       .enter()
       .append('g')
       .attr('class', 'col')
-      .attr('transform', (d: any) => 'translate(' + x(d.offset / sum) + ')');
+      .attr('transform', (d) => 'translate(' + x(d.offset / sum) + ')');
 
     // add column labels
     svg
       .selectAll('.col')
       .append('svg:text')
       .text(
-        (d: any) =>
+        (d) =>
           `${getSectionLabel(d.key, data)} (${getPercent(
             d.sum,
             sum
           )}%, ${getValueFormatted(d.sum, value)})`
       )
       .attr('class', 'colLabel')
-      .attr('x', (d: any) => x(d.sum / sum) / 2)
+      .attr('x', (d) => x(d.sum / sum) / 2)
       .attr('y', () => -10)
       .attr('text-anchor', 'middle');
 
     // add a rect for each section.
     const rows = sectionsData
       .selectAll('.section-wrapper')
-      .data((d: any) => d.values)
+      .data((d) => d.values)
       .enter()
       .append('a')
       .attr('class', 'section-wrapper');
 
     const rowsSections = rows
       .append('rect')
-      .attr('y', (d: any) => Math.max(0, y(d.offset / d.parent.sum)))
-      .attr('height', (d: any) => Math.max(0, y(d.value / d.parent.sum)) - 5)
-      .attr('width', (d: any) => Math.max(0, x(d.parent.sum / sum)) - 2)
-      .attr('data-offset', (d: any) => x(d.parent.offset / sum))
+      .attr('y', (d) => Math.max(0, y(d.offset / d.parent.sum)))
+      .attr('height', (d) => Math.max(0, y(d.value / d.parent.sum)) - 5)
+      .attr('width', (d) => Math.max(0, x(d.parent.sum / sum)) - 2)
+      .attr('data-offset', (d) => x(d.parent.offset / sum))
       .attr('class', 'section')
-      .style('fill', (d: any) => d.backgroundColor);
+      .style('fill', (d) => d.backgroundColor);
 
     rows
       .append('text')
-      .text((d: any) => `${getPercent(d.value, d.parent.sum)}%`)
-      .attr('x', (d: any) => x(d.parent.sum / sum) / 2)
+      .text((d) => `${getPercent(d.value, d.parent.sum)}%`)
+      .attr('x', (d) => x(d.parent.sum / sum) / 2)
       .attr(
         'y',
-        (d: any) =>
+        (d) =>
           y(d.offset / d.parent.sum) + (y(d.value / d.parent.sum) / 2 + 2)
       )
       .attr('class', 'label')
-      .attr('fill', (d: any) => d.color);
+      .attr('fill', (d) => d.color);
 
     // create Tooltip
     const tooltipContainer = document.createElement('div');

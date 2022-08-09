@@ -1,13 +1,11 @@
 import * as d3 from 'd3';
 import { getPercent, getValueFormatted } from '../common/utils';
 
-export interface ITooltip {}
-
-export default class Tooltip implements ITooltip {
-  container: HTMLElement;
-  sections: d3.Selection<SVGRectElement, unknown, SVGGElement, unknown>;
-  tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined>;
-  valueConfig: { prefix?: string; suffix?: string };
+export default class Tooltip {
+  container;
+  sections;
+  tooltip;
+  valueConfig;
 
   constructor(container, sections, valueConfig) {
     this.container = container;
