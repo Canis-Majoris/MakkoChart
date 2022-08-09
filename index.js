@@ -350,6 +350,7 @@ const vis = {
         
         #chart {
           margin-bottom: 20px;
+          overflow: hidden;
         }
         
         .label {
