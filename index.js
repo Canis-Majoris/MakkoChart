@@ -171,7 +171,7 @@ class Tooltip {
 
     console.log('--------------', e, d, this);
 
-    const maxWidth = document.querySelector(this.container).clientWidth - 60
+    const maxWidth = this.container.clientWidth - 60
 
     const { clientWidth, clientHeight } = this.tooltip.node()
 
