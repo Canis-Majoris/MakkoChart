@@ -336,7 +336,7 @@ class MakkoChart {
 
     // create Tooltip
 
-    this.tooltip = new Tooltip(document.querySelector('#chart'), rowsSections, value);
+    this.tooltip = new Tooltip(element.querySelector('#chart'), rowsSections, value);
   }
 }
 
