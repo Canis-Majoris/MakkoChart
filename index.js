@@ -139,6 +139,18 @@ class Tooltip {
   constructor(container, sections, valueConfig) {
     d3.select(container).selectAll('.tooltip').remove();
 
+    // add content holder
+    let holder = document.createElement("div");
+
+    holder.style.position = "absolute";
+    holder.style.visibility = "hidden";
+    holder.style.display = "block";
+    holder.className = "tooltip";
+
+    container.append(holder);
+
+    let segment, rect, content = '';
+
     const tooltip = d3
       .select(container)
       .append('div')
@@ -154,27 +166,33 @@ class Tooltip {
 
       const maxWidth = container.clientWidth - 60
 
-      const newCintent = document.createElement('div')
+      if (segment !== d.segmentLabel) {
+        content = `
+                <div>
+                    <h3 class="tooltip-title">${d.segmentLabel}</h3>
+                    <h4 class="tooltip-subtitle">${d.label}</h4>
+                    <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(d.value, valueConfig)}</p>
+                </div>  
+            `
+        holder.innerHTML = content
 
-      newCintent.innerHTML = `
-        <div>
-          <h3 class="tooltip-title">${d.segmentLabel}</h3>
-          <h4 class="tooltip-subtitle">${d.label}</h4>
-          <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(d.value, valueConfig)}</p>
-        </div>
-      `
+        rect = holder.getBoundingClientRect();
+      }
 
-      const { clientWidth, clientHeight } = newCintent
+      const { width, height } = rect
 
       const xOffset = d3.pointer(e)[0] + Number(offset)
       const yOffset = d3.pointer(e)[1]
 
-      const xOffsetCorrection = xOffset + clientWidth > maxWidth ? -clientWidth + 60 : 60;
-      const yOffsetCorrection = yOffset - clientHeight + 20 < 0 ? -clientHeight + 100 : -50;
+      const xOffsetCorrection = xOffset + width > maxWidth ? -width + 60 : 60;
+      const yOffsetCorrection = yOffset - height + 20 < 0 ? -height + 100 : -50;
 
-      tooltip
-        .html(newCintent)
-        .style("transform", `translate3d(${xOffset + xOffsetCorrection}px, ${yOffset + yOffsetCorrection}px, 0)`);
+      tooltip.style("transform", `translate3d(${xOffset + xOffsetCorrection}px, ${yOffset + yOffsetCorrection}px, 0)`);
+
+      if (segment !== d.segmentLabel)
+        tooltip.html(content)
+
+      segment = d.segmentLabel
     };
 
     const mouseleave = function () {
