@@ -304,14 +304,13 @@ class MakkoChart {
       .append('a')
       .attr('class', 'section-wrapper');
 
-    const rowsSections = rows
-      .append('rect')
-      .attr('y', (d) => Math.max(0, y(d.offset / d.parent.sum)))
-      .attr('height', (d) => Math.max(0, y(d.value / d.parent.sum)) - 5)
-      .attr('width', (d) => Math.max(0, x(d.parent.sum / sum)) - 2)
-      .attr('data-offset', (d) => x(d.parent.offset / sum))
-      .attr('class', 'section')
-      .style('fill', (d) => d.backgroundColor);
+    const rowsSections = rows.append("rect")
+      .attr("y", (d) => Math.max(0, y(d.offset / d.parent.sum)))
+      .attr("height", (d) => Math.max(1, y(d.value / d.parent.sum) - 1))
+      .attr("width", (d) => Math.max(1, x(d.parent.sum / sum) - 1))
+      .attr("data-offset", (d) => x(d.parent.offset / sum))
+      .attr("class", "section")
+      .style("fill", (d) => d.backgroundColor)
 
     // add total on each column
     svg.selectAll(".col")
