@@ -11,9 +11,78 @@ const fixChartSizing = () => {
     svg.setAttribute('width', container.clientWidth);
 };
 
-looker.plugins.visualizations.add({
-    create: function (element, config) {
+function descend(obj, depth = 0) {
+    const arr = []
+    for (const k in obj) {
+        if (k === '__data') {
+            continue
+        }
+        const child = {
+            name: k,
+            depth,
+            children: descend(obj[k], depth + 1)
+        }
+        if ('__data' in obj[k]) {
+            child.data = obj[k].__data
+        }
+        arr.push(child)
+    }
+    return arr
+}
 
+function burrow(table) {
+    // create nested object
+    const obj = {}
+
+    table.forEach((row) => {
+        // start at root
+        let layer = obj
+
+        // create children as nested objects
+        row.taxonomy.value.forEach((key) => {
+            layer[key] = key in layer ? layer[key] : {}
+            layer = layer[key]
+        })
+        layer.__data = row
+    })
+
+    // use descend to create nested children arrays
+    return {
+        name: 'root',
+        children: descend(obj, 1),
+        depth: 0
+    }
+}
+
+const formatType = (valueFormat) => {
+    if (!valueFormat) return undefined
+    let format = ''
+    switch (valueFormat.charAt(0)) {
+        case '$':
+            format += '$'; break
+        case '£':
+            format += '£'; break
+        case '€':
+            format += '€'; break
+    }
+    if (valueFormat.indexOf(',') > -1) {
+        format += ','
+    }
+    const splitValueFormat = valueFormat.split('.')
+    format += '.'
+    format += splitValueFormat.length > 1 ? splitValueFormat[1].length : 0
+
+    switch (valueFormat.slice(-1)) {
+        case '%':
+            format += '%'; break
+        case '0':
+            format += 'f'; break
+    }
+    return d3.format(format)
+}
+
+class Chart1 {
+    create(element, config) {
         var container = element.appendChild(document.createElement("div"));
         container.setAttribute("id", "my-vega");
 
@@ -29,8 +98,9 @@ looker.plugins.visualizations.add({
         formStyle.setAttribute("id", "annotFormStyle");
         formStyle.innerHTML = "input[type=text], select, textarea {width: 100%;padding: 12px;border: 1px solid #ccc;border-radius: 4px;box-sizing: border-box;margin-top: 6px;margin-bottom: 16px;resize: vertical;}input[type=button] {background-color: #4CAF50;color: white;padding: 12px 20px;border: none;border-radius: 4px;cursor: pointer;}input[type=button]:hover {background-color: #45a049;}#annotation-input {width: 50%;margin-left: auto;margin-right: auto;border-radius: 5px;background-color: #f2f2f2;padding: 20px;}";
         element.appendChild(formStyle);
-    },
-    updateAsync: function (data, element, config, queryResponse, details, done) {
+
+    }
+    updateAsync(data, element, config, queryResponse, details, done) {
 
         var visMaster = this;
 
@@ -41,11 +111,50 @@ looker.plugins.visualizations.add({
         var allFields = [];
         var options = {};
 
+        const { totals_data, fields } = queryResponse
+
+        const dimension = fields.dimension_like[0]
+        const measure = fields.measure_like[0]
+
+        const dimension_key = dimension.name
+        const measure_key = measure.name
+
+        const format = formatType(measure.value_format) || ((s) => s.toString())
+
+        const transformedData = data.map((item) => ({
+            key: item[dimension_key].value,
+            label: item[dimension_key].value,
+            color: '#1f77b4',
+            segments: Object.entries(item[measure_key] ?? {})
+                .flatMap(([label, { value, rendered }]) => Number.isFinite(value) ? ({
+                    key: label,
+                    label,
+                    value,
+                    rendered
+                }) : [])
+        }))
+
+        const chartConfig = {
+            xAxis: {
+                type: 'value',
+                prefix: '$'
+            },
+            value: {
+                prefix: '$',
+                suffix: 'MM',
+            }
+        }
+
+
+        console.log('<<<<<<<<<<<<*****', { data, format, transformedData })
+
+
         var createOptionsResponse = createOptions(queryResponse);
 
-        console.log(config);
+
 
         options = createOptionsResponse['options'];
+
 
         var optionsMasterList = createOptionsResponse['masterList'];
 
@@ -68,8 +177,10 @@ looker.plugins.visualizations.add({
 
         dataProperties = createMetaData(allFields, queryResponse);
 
+        console.log(',,,,,,,,,,,', { allFields, config, dataProperties, queryResponse });
 
-        if (Object.keys(config).length > 3) {
+
+        if (Object.keys(config).length > 1) {
 
             var fieldSettingArray = ["x", "y", "x2", "y2", "column", "row", "color", "color2", "size", "size2", "shape", "shape2", "highlight", "sort", "order", "labelField", "labelFilter"];
             // var lookerColors = ["#3eb0d5","#B1399E","#C2DD67","#592EC2","#4276BE","#72D16D","#FFD95F","#B32F37","#9174F0","#E57947","#75E2E2","#FBB555"];
@@ -122,25 +233,25 @@ looker.plugins.visualizations.add({
             var chartHeight = element.offsetHeight * 0.96; // - 35
             var chartWidth = element.offsetWidth * 0.96 - 62;
 
-            if (config['legendPosition'] == "top" || config['legendPosition'] == "bottom") {
-                chartHeight = chartHeight - (40 + 18 + config['legendPadding']);
-            }
+            // if (config['legendPosition'] == "top" || config['legendPosition'] == "bottom") {
+            //     chartHeight = chartHeight - (40 + 18 + config['legendPadding']);
+            // }
 
-            if (config['legendPosition'] == "left" || config['legendPosition'] == "right") {
-                chartWidth = chartWidth - (70 + config['legendPadding']);
-            }
+            // if (config['legendPosition'] == "left" || config['legendPosition'] == "right") {
+            //     chartWidth = chartWidth - (70 + config['legendPadding']);
+            // }
 
-            if (dataProperties[config['y']]['dtype'] == "nominal") {
-                if (config['axisLabelAngle'] == 0 || typeof config['axisLabelAngle'] == "undefined") {
-                    chartWidth = chartWidth - 47;
-                }
-            }
+            // if (dataProperties[config['y']]['dtype'] == "nominal") {
+            //     if (config['axisLabelAngle'] == 0 || typeof config['axisLabelAngle'] == "undefined") {
+            //         chartWidth = chartWidth - 47;
+            //     }
+            // }
 
-            if (dataProperties[config['x']]['dtype'] == "nominal") {
-                if (Math.abs(config['axisLabelAngle']) != 0 || typeof config['axisLabelAngle'] == "undefined") {
-                    chartHeight = chartHeight - 59;
-                }
-            }
+            // if (dataProperties[config['x']]['dtype'] == "nominal") {
+            //     if (Math.abs(config['axisLabelAngle']) != 0 || typeof config['axisLabelAngle'] == "undefined") {
+            //         chartHeight = chartHeight - 59;
+            //     }
+            // }
 
             // console.log(chartWidth);
             // console.log(chartHeight);
@@ -212,9 +323,9 @@ looker.plugins.visualizations.add({
             for (var datum in dataProperties) {
                 var fieldsToExclude = [];
 
-                if (config['includeInTip'] != "") {
-                    fieldsToExclude = config['includeInTip'].split(",").map(function (item) { return item.trim() });
-                }
+                // if (config['includeInTip'] != "") {
+                //     fieldsToExclude = config['includeInTip'].split(",").map(function (item) { return item.trim() });
+                // }
 
                 if (!fieldsToExclude.includes(dataProperties[datum]['title'])) {
                     var tip = {};
@@ -235,6 +346,8 @@ looker.plugins.visualizations.add({
             // if (config['mark_type'] == "bar") {
             //   config['fixed_size'] = -1;
             // }
+
+            console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', myData)
 
             var chart = {
                 "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
@@ -291,8 +404,8 @@ looker.plugins.visualizations.add({
                     "layer": [{
                         "mark": {
                             "type": config['mark_type'],
-                            "fillOpacity": config['opacity'],
-                            "stroke": config['border'][0]
+                            "fillOpacity": 'red',
+                            "stroke": 'red'
                         },
                         "encoding": {}
                     }
@@ -324,12 +437,12 @@ looker.plugins.visualizations.add({
 
             // Fix sizing on next tick
 
-            if (config['chartAutoSize'] == "yes") {
-                setTimeout(() => fixChartSizing(), 0);
-            } else {
-                const container = document.getElementById('vis');
-                container.style.overflow = 'scroll';
-            }
+            // if (config['chartAutoSize'] == "yes") {
+            //     setTimeout(() => fixChartSizing(), 0);
+            // } else {
+            //     const container = document.getElementById('vis');
+            //     container?.style?.overflow = 'scroll';
+            // }
 
             ////////////////////////////////////////////
             //check and add another layer if requested//
@@ -406,6 +519,8 @@ looker.plugins.visualizations.add({
 
             //add column or row facet
             //row & column facets
+
+            console.log('(((((((((((((((', config['column'])
             if (config['column'] != "" && typeof config['column'] != "undefined") {
                 //add column facet
                 chart.facet.column = { "field": config['column'], "type": dataProperties[config['column']]['dtype'], "title": dataProperties[config['column']]['title'] };
@@ -1305,7 +1420,15 @@ looker.plugins.visualizations.add({
         }
 
     }
-});
+
+    trigger(action, payload) {
+        if (action === 'registerOptions') {
+            this.options = payload
+        }
+
+        console.log('................', this.options)
+    }
+}
 
 function createMetaData(allFields, queryResponse) {
 
@@ -2118,3 +2241,18 @@ function createOptions(queryResponse) {
 
     return optionsResponse;
 }
+
+
+const init = () => {
+
+    const { data, config, queryResponse } = realData
+
+    const done = () => { }
+    const el = document.querySelector('.wrapper')
+
+    const cc = new Chart1()
+    cc.create(el)
+    cc.updateAsync(data, el, config, queryResponse, {}, done)
+}
+
+init()

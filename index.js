@@ -1,172 +1,29 @@
-data = [
-  {
-    "key": "brand-1",
-    "label": "Brand 1",
-    "color": "#000000",
-    "segments": [
-      {
-        "key": "segment-1",
-        "label": "Segment 1",
-        "value": 345
-      },
-      {
-        "key": "segment-2",
-        "label": "Segment 2",
-        "value": 34
-      },
-      {
-        "key": "segment-3",
-        "label": "Segment 3",
-        "value": 453
-      },
-      {
-        "key": "segment-4",
-        "label": "Segment 4",
-        "value": 123
-      }
-    ]
-  },
-  {
-    "key": "brand-2",
-    "label": "Brand 2",
-    "color": "#1f77b4",
-    "segments": [
-      {
-        "key": "segment-1",
-        "label": "Segment 1",
-        "value": 45
-      },
-      {
-        "key": "segment-2",
-        "label": "Segment 2",
-        "value": 659
-      },
-      {
-        "key": "segment-4",
-        "label": "Segment 4",
-        "value": 543
-      }
-    ]
-  },
-  {
-    "key": "brand-3",
-    "label": "Brand 3",
-    "color": "#009688",
-    "segments": [
-      {
-        "key": "segment-2",
-        "label": "Segment 2",
-        "value": 656
-      },
-      {
-        "key": "segment-3",
-        "label": "Segment 3",
-        "value": 231
-      },
-      {
-        "key": "segment-4",
-        "label": "Segment 4",
-        "value": 43
-      },
-      {
-        "key": "segment-5",
-        "label": "Segment 5",
-        "value": 124
-      }
-    ]
-  },
-  {
-    "key": "brand-4",
-    "label": "Brand 4",
-    "color": "#6d36cf",
-    "segments": [
-      {
-        "key": "segment-1",
-        "label": "Segment 1",
-        "value": 34
-      },
-      {
-        "key": "segment-3",
-        "label": "Segment 3",
-        "value": 18
-      },
-      {
-        "key": "segment-4",
-        "label": "Segment 4",
-        "value": 45
-      },
-      {
-        "key": "segment-5",
-        "label": "Segment 5",
-        "value": 124
-      }
-    ]
-  },
-  {
-    "key": "brand-5",
-    "label": "Brand 5",
-    "color": "#ab1618",
-    "segments": [
-      {
-        "key": "segment-2",
-        "label": "Segment 2",
-        "value": 223
-      },
-      {
-        "key": "segment-3",
-        "label": "Segment 3",
-        "value": 211
-      },
-      {
-        "key": "segment-4",
-        "label": "Segment 4",
-        "value": 43
-      },
-      {
-        "key": "segment-5",
-        "label": "Segment 5",
-        "value": 67
-      },
-      {
-        "key": "segment-6",
-        "label": "Segment 6",
-        "value": 44
-      },
-      {
-        "key": "segment-7",
-        "label": "Segment 7",
-        "value": 257
-      },
-      {
-        "key": "segment-8",
-        "label": "Segment 8",
-        "value": 112
-      },
-      {
-        "key": "segment-9",
-        "label": "Segment 9",
-        "value": 97
-      },
-      {
-        "key": "segment-10",
-        "label": "Segment 10",
-        "value": 124
-      }
-    ]
+formatType = (valueFormat) => {
+  if (!valueFormat) return undefined
+  let format = ''
+  switch (valueFormat.charAt(0)) {
+    case '$':
+      format += '$'; break
+    case '£':
+      format += '£'; break
+    case '€':
+      format += '€'; break
   }
-];
-
-config = {
-  "xAxis": {
-    "type": "value",
-    "prefix": "$"
-  },
-  "value": {
-    "prefix": "$",
-    "suffix": "MM"
+  if (valueFormat.indexOf(',') > -1) {
+    format += ','
   }
-};
+  const splitValueFormat = valueFormat.split('.')
+  format += '.'
+  format += splitValueFormat.length > 1 ? splitValueFormat[1].length : 0
 
+  switch (valueFormat.slice(-1)) {
+    case '%':
+      format += '%'; break
+    case '0':
+      format += 'f'; break
+  }
+  return d3.format(format)
+}
 
 numberFormatter = Intl.NumberFormat('en', {
   notation: 'compact',
@@ -571,11 +428,46 @@ const vis = {
   },
   // render in response to the data or settings changing
   // TODO: arguments to be integrated
-  updateAsync(_data, element, _config, queryResponse) {
+  updateAsync(data, element, config, queryResponse, details, done) {
 
-    console.log('.....................', { _data, element, _config, queryResponse })
+    const { totals_data, fields } = queryResponse
+
+    const dimension = fields.dimension_like[0]
+    const measure = fields.measure_like[0]
+
+    const dimension_key = dimension.name
+    const measure_key = measure.name
+
+    const format = formatType(measure.value_format) || ((s) => s.toString())
+
+    const transformedData = data.map((item) => ({
+      key: item[dimension_key].value,
+      label: item[dimension_key].value,
+      color: '#1f77b4',
+      segments: Object.entries(item[measure_key] ?? {})
+        .flatMap(([label, { value, rendered }]) => Number.isFinite(value) ? ({
+          key: label,
+          label,
+          value,
+          rendered
+        }) : [])
+    }))
+
+    const chartConfig = {
+      xAxis: {
+        type: 'value',
+        prefix: '$'
+      },
+      value: {
+        prefix: '$',
+        suffix: 'MM',
+      }
+    }
+
     // render chart
-    this.makkoChart.render({ data, config, element });
+    this.makkoChart.render({ data: transformedData, config: chartConfig, element });
+
+    done()
   },
 };
 
