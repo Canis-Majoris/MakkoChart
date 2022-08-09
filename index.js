@@ -344,7 +344,7 @@ class MakkoChart {
       .attr("fill", (d) => d.color);
 
     // create Tooltip
-    this.tooltip = new Tooltip(element, rowsSections, value);
+    this.tooltip = new Tooltip(element.querySelector('#chart'), rowsSections, value);
   }
 }
 
