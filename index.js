@@ -147,7 +147,7 @@ class Tooltip {
     this.valueConfig = valueConfig;
   }
 
-  render() {
+  init() {
     d3.select(this.container).selectAll('#tooltip').remove();
 
     this.tooltip = d3
@@ -337,6 +337,7 @@ class MakkoChart {
     // create Tooltip
 
     this.tooltip = new Tooltip(element.querySelector('#chart'), rowsSections, value);
+    this.tooltip.init()
   }
 }
 
