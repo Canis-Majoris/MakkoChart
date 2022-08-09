@@ -148,7 +148,7 @@ class Tooltip {
   }
 
   render() {
-    d3.select(this.container).selectAll('.tooltip').remove();
+    d3.select(this.container).selectAll('#tooltip').remove();
 
     this.tooltip = d3
       .select(this.container)
@@ -167,25 +167,29 @@ class Tooltip {
   };
 
   mousemove = function (e, d) {
-    const offset = d3.select(this).attr('data-offset');
+    const offset = d3.select(this).attr("data-offset")
+
+    console.log('--------------', e, d, this);
+
+    const maxWidth = document.querySelector(this.container).clientWidth - 60
+
+    const { clientWidth, clientHeight } = this.tooltip.node()
+
+    const xOffset = d3.pointer(e)[0] + Number(offset)
+    const yOffset = d3.pointer(e)[1]
+
+    const xOffsetCorrection = xOffset + clientWidth > maxWidth ? -clientWidth + 60 : 60;
+    const yOffsetCorrection = yOffset - clientHeight + 20 < 0 ? -clientHeight + 100 : -50;
 
     this.tooltip
-      .html(
-        `
-        <div>
-            <h4 class="tooltip-title">${d.segmentLabel}</h4>
-            <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(
-          d.value,
-          this.valueConfig
-        )}</p>
-        </div>
-    `
-      )
-      .style(
-        'transform',
-        `translate3d(${d3.pointer(e)[0] + Number(offset) + 60}px, ${d3.pointer(e)[1] - 20
-        }px, 0)`
-      );
+      .html(`
+            <div>
+                <h3 class="tooltip-title">${d.segmentLabel}</h3>
+                <h4 class="tooltip-subtitle">${d.label}</h4>
+                <p>${getPercent(d.value, d.parent.sum)}%, ${getValueFormatted(d.value, valueConfig)}</p>
+            </div>
+        `)
+      .style("transform", `translate3d(${xOffset + xOffsetCorrection}px, ${yOffset + yOffsetCorrection}px, 0)`);
   };
 
   mouseleave = function () {
@@ -292,22 +296,6 @@ class MakkoChart {
       .attr('class', 'col')
       .attr('transform', (d) => 'translate(' + x(d.offset / sum) + ')');
 
-    // add column labels
-    svg
-      .selectAll('.col')
-      .append('svg:text')
-      .text(
-        (d) =>
-          `${getSectionLabel(d.key, data)} (${getPercent(
-            d.sum,
-            sum
-          )}%, ${getValueFormatted(d.sum, value)})`
-      )
-      .attr('class', 'colLabel')
-      .attr('x', (d) => x(d.sum / sum) / 2)
-      .attr('y', () => -10)
-      .attr('text-anchor', 'middle');
-
     // add a rect for each section.
     const rows = sectionsData
       .selectAll('.section-wrapper')
@@ -325,17 +313,27 @@ class MakkoChart {
       .attr('class', 'section')
       .style('fill', (d) => d.backgroundColor);
 
-    rows
-      .append('text')
-      .text((d) => `${getPercent(d.value, d.parent.sum)}%`)
-      .attr('x', (d) => x(d.parent.sum / sum) / 2)
-      .attr(
-        'y',
-        (d) =>
-          y(d.offset / d.parent.sum) + (y(d.value / d.parent.sum) / 2 + 2)
-      )
-      .attr('class', 'label')
-      .attr('fill', (d) => d.color);
+    // add total on each column
+    svg.selectAll(".col")
+      .append("svg:text")
+      .text((d, i, cols) => {
+        const el = cols[i].parentElement.getBoundingClientRect();
+
+        if (el.width < 50) return ''
+
+        return (`${getSectionLabel(d.key, data)} (${getPercent(d.sum, sum)}%, ${getValueFormatted(d.sum, value)})`)
+      })
+      .attr("class", "colLabel")
+      .attr("x", (d) => x(d.sum / sum) / 2)
+      .attr("y", (d) => -10)
+      .attr("text-anchor", "middle")
+
+    rows.append("text")
+      .text((d) => Math.max(1, y(d.value / d.parent.sum) - 1) < 10 || Math.max(1, x(d.parent.sum / sum) - 1) < 50 ? '' : `${getPercent(d.value, d.parent.sum)}%`)
+      .attr("x", (d) => x(d.parent.sum / sum) / 2)
+      .attr("y", (d) => y(d.offset / d.parent.sum) + ((y(d.value / d.parent.sum)) / 2 + 2))
+      .attr("class", "label")
+      .attr("fill", (d) => d.color);
 
     // create Tooltip
 
