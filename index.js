@@ -136,29 +136,14 @@ getPercent = (value, total) =>
 
 
 class Tooltip {
-  container;
-  sections;
-  tooltip;
-  valueConfig;
-
   constructor(container, sections, valueConfig) {
-    this.container = container;
-    this.sections = sections;
-    this.valueConfig = valueConfig;
-  }
-
-  init() {
-    d3.select(this.container).selectAll('.tooltip').remove();
-
-    const container = this.container;
+    d3.select(container).selectAll('.tooltip').remove();
 
     const tooltip = d3
-      .select(this.container)
+      .select(container)
       .append('div')
       .style('opacity', 0)
       .attr('class', 'tooltip');
-
-    this.tooltip = tooltip
 
     const mouseover = function () {
       tooltip.style('opacity', 1);
@@ -192,7 +177,7 @@ class Tooltip {
       tooltip.style('opacity', 0);
     };
 
-    this.sections
+    sections
       .on('mouseover', mouseover)
       .on('mousemove', mousemove)
       .on('mouseleave', mouseleave);
@@ -339,9 +324,7 @@ class MakkoChart {
       .attr("fill", (d) => d.color);
 
     // create Tooltip
-
     this.tooltip = new Tooltip(element, rowsSections, value);
-    this.tooltip.init()
   }
 }
 
