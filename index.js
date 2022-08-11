@@ -16,6 +16,8 @@ const colorPalette = {
   Other: "#1f77b4"
 }
 
+const defaultColor = '#607d8b'
+
 formatType = (valueFormat) => {
   if (!valueFormat) return undefined
   let format = ''
@@ -84,7 +86,7 @@ adjustShade = (col, amt) => {
 };
 
 generateMakkoData = data => data.map((config, i) => {
-  const { key, label, color: baseColor, segments } = config || {};
+  const { key, label, color: baseColor = defaultColor, segments } = config || {};
 
   const largetsSegmentValue = Math.max(...segments.map(({ value }) => value))
 
