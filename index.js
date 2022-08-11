@@ -1,3 +1,21 @@
+numberFormatter = Intl.NumberFormat('en', {
+  notation: 'compact',
+  maximumFractionDigits: 2,
+});
+
+const colorPalette = {
+  "Carolina Herrera": "#ff3021",
+  "Paco Rabanne": "#035ff4",
+  "Jean Paul Gaultier": "#28d92f",
+  "Christian Louboutin": "#ff899d",
+  "Penhaligon's": "#ff9800",
+  "Nina Ricci": "#727272",
+  "Dries van Noten": "#ffff18",
+  "L'Artisan Parfumeur": "#604439",
+  "L'Artisan Parfumeur Obsolete": "#604439",
+  Other: "#1f77b4"
+}
+
 formatType = (valueFormat) => {
   if (!valueFormat) return undefined
   let format = ''
@@ -24,11 +42,6 @@ formatType = (valueFormat) => {
   }
   return d3.format(format)
 }
-
-numberFormatter = Intl.NumberFormat('en', {
-  notation: 'compact',
-  maximumFractionDigits: 2,
-});
 
 adjustShade = (col, amt) => {
   amt = Math.round(amt);
@@ -70,51 +83,44 @@ adjustShade = (col, amt) => {
   return [(usePound ? '#' : '') + RR + GG + BB, textColour];
 };
 
-generatePalleteFromColor = (color, size) =>
-  [...Array(size)].map((_, i) =>
-    adjustShade(color, (1 - (size - i) / size) * 100)
-  );
+generateMakkoData = data => data.map((config, i) => {
+  const { key, label, color: baseColor, segments } = config || {};
 
-generateMakkoData = (data) =>
-  data.map((config, i) => {
-    const { key, label, color, segments } = config || {};
+  const largetsSegmentValue = Math.max(...segments.map(({ value }) => value))
 
-    const colorPalette = generatePalleteFromColor(
-      color || '#000000',
-      segments?.length ?? 1
-    );
-
-    const values = segments?.map((segment, index) => {
+  const values = segments?.map((segment, index) => {
       const {
-        value,
-        key: segmentKey,
-        label: segmentLabel,
-        color: customTextColor,
-        backgroundColor: customBackgroundColor,
+          value,
+          key: segmentKey,
+          label: segmentLabel,
+          color: customTextColor,
+          backgroundColor: customBackgroundColor
       } = segment;
 
+      const [backgroundColor, color] = adjustShade(baseColor, 100 - Math.min(100, getPercent(value, largetsSegmentValue)))
+
       return {
-        section: key,
-        value,
-        label,
-        segmentLabel,
-        segmentKey,
-        backgroundColor: customBackgroundColor ?? colorPalette[index][0],
-        color: customTextColor ?? colorPalette[index][1],
-      };
-    });
-
-    const item = {
-      key,
-      values,
-    };
-
-    values.forEach((value) => {
-      value.parent = item;
-    });
-
-    return item;
+          section: key,
+          value,
+          label,
+          segmentLabel,
+          segmentKey,
+          backgroundColor: customBackgroundColor ?? backgroundColor,
+          color: customTextColor ?? color
+      }
   });
+
+  const item = {
+      key,
+      values
+  }
+
+  values.forEach((value) => {
+      value.parent = item
+  })
+
+  return item
+})
 
 generateLengendData = (data) =>
   data.reduce((arr, { segmentKey, segmentLabel }) => {
@@ -464,22 +470,26 @@ const vis = {
 
     const format = formatType(measure.value_format) || ((s) => s.toString())
 
-    const transformedData = data.map((item) => ({
-      key: item[dimension_key].value,
-      label: item[dimension_key].value,
-      color: '#1f77b4',
-      segments: Object.entries(item[measure_key] ?? {})
-        .flatMap(([label, { value, rendered }]) => Number.isFinite(value) ? ({
-          key: label,
-          label,
-          value,
-          rendered
-        }) : [])
-    }))
+    const transformedData = data.map((item) => {
+      const key = item[dimension_key].value
+
+      return {
+        key,
+        label: key,
+        color: colorPalette[key],
+        segments: Object.entries(item[measure_key] ?? {})
+          .flatMap(([label, { value, rendered }]) => Number.isFinite(value) ? ({
+            key: label,
+            label,
+            value,
+            rendered
+          }) : [])
+      }
+    })
 
     const chartConfig = {
       xAxis: {
-        type: 'value',
+        type: 'percent',
         prefix: '$'
       },
       value: {

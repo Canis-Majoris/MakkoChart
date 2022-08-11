@@ -1,3 +1,16 @@
+const colorPalette = {
+    "Carolina Herrera": "#ff3021",
+    "Paco Rabanne": "#035ff4",
+    "Jean Paul Gaultier": "#28d92f",
+    "Christian Louboutin": "#ff7ac8",
+    "Penhaligon's": "#ff9800",
+    "Nina Ricci": "#727272",
+    "Dries van Noten": "#ffff18",
+    "L'Artisan Parfumeur": "#604439",
+    "L'Artisan Parfumeur Obsolete": "#604439",
+    Other: "#1f77b4"
+}
+
 const realData = {
     data: [
         {
@@ -4577,10 +4590,6 @@ const realData = {
     }
 }
 
-
-
-
-
 const numberFormatter = Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 })
 
 onSectionHover = (e) => {
@@ -4596,6 +4605,8 @@ debounce = (func, timeout = 300) => {
 }
 
 adjustShade = (col, amt) => {
+
+    console.log('........', col, amt)
 
     amt = Math.round(amt)
 
@@ -4799,17 +4810,6 @@ const data = [
     },
 ]
 
-const config = {
-    xAxis: {
-        type: 'value',
-        prefix: '$'
-    },
-    value: {
-        prefix: '$',
-        suffix: 'MM',
-    }
-}
-
 calculateSegmentOffsets = segments => {
     let offset = 0;
     const offsetArr = [];
@@ -4826,9 +4826,9 @@ calculateSegmentOffsets = segments => {
 generatePalleteFromColor = (color, size) => [...Array(size)].map((_, i) => adjustShade(color, (1 - (size - i) / size) * 100))
 
 generateMakkoData = data => data.map((config, i) => {
-    const { key, label, color, segments } = config || {};
+    const { key, label, color: baseColor, segments } = config || {};
 
-    const colorPalette = generatePalleteFromColor(color || '#000000', segments?.length ?? 1)
+    const largetsSegmentValue = Math.max(...segments.map(({ value }) => value))
 
     const values = segments?.map((segment, index) => {
         const {
@@ -4839,14 +4839,16 @@ generateMakkoData = data => data.map((config, i) => {
             backgroundColor: customBackgroundColor
         } = segment;
 
+        const [backgroundColor, color] = adjustShade(baseColor, 100 - Math.min(100, getPercent(value, largetsSegmentValue)))
+
         return {
             section: key,
             value,
             label,
             segmentLabel,
             segmentKey,
-            backgroundColor: customBackgroundColor ?? colorPalette[index][0],
-            color: customTextColor ?? colorPalette[index][1]
+            backgroundColor: customBackgroundColor ?? backgroundColor,
+            color: customTextColor ?? color
         }
     });
 
@@ -4872,7 +4874,7 @@ getSectionLabel = (sectionKey, data) => data.find(({ key }) => key === sectionKe
 
 getValueFormatted = (value, { prefix, suffix }) => `${prefix}${value}${suffix}`
 
-getPercent = (value, total) => numberFormatter.format((value / total * 100))
+getPercent = (value, total) => numberFormatter.format(value / total * 100)
 
 const init = () => {
     addEventListener('load', render)
@@ -4890,22 +4892,26 @@ const render = () => {
 
     // const format = formatType(measure.value_format) || ((s) => s.toString())
 
-    const data = realData.data.map((item) => ({
-        key: item[dimension_key].value,
-        label: item[dimension_key].value,
-        color: '#1f77b4',
-        segments: Object.entries(item[measure_key] ?? {})
-            .flatMap(([label, { value, rendered }]) => Number.isFinite(value) ? ({
-                key: label,
-                label,
-                value,
-                rendered
-            }) : [])
-    }))
+    const data = realData.data.map((item) => {
+        const key = item[dimension_key].value
+
+        return {
+            key,
+            label: key,
+            color: colorPalette[key],
+            segments: Object.entries(item[measure_key] ?? {})
+                .flatMap(([label, { value, rendered }]) => Number.isFinite(value) ? ({
+                    key: label,
+                    label,
+                    value,
+                    rendered
+                }) : [])
+        }
+    })
 
     const config = {
         xAxis: {
-            type: 'value',
+            type: 'percent',
             prefix: '$'
         },
         value: {
@@ -4916,7 +4922,7 @@ const render = () => {
 
 
     ///////////////////
-    const width = innerWidth - 10,
+    const width = innerWidth - 15,
         height = 700,
         margin = 30;
 
@@ -4936,7 +4942,7 @@ const render = () => {
     }, 0)), 0);
 
     const x = d3.scaleLinear()
-        .range([0, width - 3 * margin]);
+        .range([0, width - 2 * margin]);
 
     const y = d3.scaleLinear()
         .range([0, height - 2 * margin]);
@@ -4946,13 +4952,13 @@ const render = () => {
 
     const xValue = d3.scaleLinear()
         .domain([0, xAxis.type === 'value' ? sum : 1])
-        .range([0, width - 3 * margin])
+        .range([0, width - 2 * margin])
 
     const svg = d3.select("#chart").append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
-        .attr("transform", "translate(" + 2 * margin + "," + margin + ")");
+        .attr("transform", "translate(" + margin + "," + margin + ")");
 
     // Add x-axis ticks.
 
@@ -4978,20 +4984,6 @@ const render = () => {
         .style("stroke", "#CECECE")
         .attr("x2", width - margin * 3)
         .attr("transform", (d) => "translate(" + 0 + "," + y(1) + ")");
-
-    // Add y-axis ticks.
-    const ytick = svg.selectAll(".y")
-        .data(y.ticks(10))
-        .enter().append("svg:g")
-        .attr("class", "y")
-        .attr("transform", (d) => "translate(0," + y(1 - d) + ")");
-
-    ytick.append("svg:text")
-        .attr("x", -15)
-        .attr("text-anchor", "end")
-        .attr("class", "y-text")
-        .attr("dy", ".35em")
-        .text(p);
 
     // Add a group for each cause.
     const sectionsData = svg.selectAll(".col")
