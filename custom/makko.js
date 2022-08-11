@@ -8,7 +8,7 @@ const colorPalette = {
     "Dries van Noten": "#ffff18",
     "L'Artisan Parfumeur": "#604439",
     "L'Artisan Parfumeur Obsolete": "#604439",
-    Other: "#1f77b4"
+    Other: "#765da5"
 }
 
 const realData = {
@@ -4605,9 +4605,6 @@ debounce = (func, timeout = 300) => {
 }
 
 adjustShade = (col, amt) => {
-
-    console.log('........', col, amt)
-
     amt = Math.round(amt)
 
     let usePound = false;
