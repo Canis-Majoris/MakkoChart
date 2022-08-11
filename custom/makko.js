@@ -4828,6 +4828,13 @@ generatePalleteFromColor = (color, size) => [...Array(size)].map((_, i) => adjus
 generateMakkoData = data => data.map((config, i) => {
     const { key, label, color: baseColor, segments } = config || {};
 
+    const segmentsByValue = segments.map(({ key, value }) => ({ key, value })).sort((a, b) => b.value - a.value);
+
+    const colorPalette = generatePalleteFromColor(
+        baseColor || '#000000',
+        segments?.length ?? 1
+    );
+
     const largetsSegmentValue = Math.max(...segments.map(({ value }) => value))
 
     const values = segments?.map((segment, index) => {
@@ -4839,7 +4846,10 @@ generateMakkoData = data => data.map((config, i) => {
             backgroundColor: customBackgroundColor
         } = segment;
 
-        const [backgroundColor, color] = adjustShade(baseColor, 100 - Math.min(100, getPercent(value, largetsSegmentValue)))
+
+        const indexByValue = segmentsByValue.findIndex(({ key }) => key === segmentKey)
+
+        // const [backgroundColor, color] = adjustShade(baseColor, 100 - Math.min(100, 1.1 * getPercent(value, largetsSegmentValue)))
 
         return {
             section: key,
@@ -4847,8 +4857,8 @@ generateMakkoData = data => data.map((config, i) => {
             label,
             segmentLabel,
             segmentKey,
-            backgroundColor: customBackgroundColor ?? backgroundColor,
-            color: customTextColor ?? color
+            backgroundColor: customBackgroundColor ?? colorPalette[indexByValue][0],
+            color: customTextColor ?? colorPalette[indexByValue][1]
         }
     });
 

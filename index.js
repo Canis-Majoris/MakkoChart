@@ -89,34 +89,34 @@ generateMakkoData = data => data.map((config, i) => {
   const largetsSegmentValue = Math.max(...segments.map(({ value }) => value))
 
   const values = segments?.map((segment, index) => {
-      const {
-          value,
-          key: segmentKey,
-          label: segmentLabel,
-          color: customTextColor,
-          backgroundColor: customBackgroundColor
-      } = segment;
+    const {
+      value,
+      key: segmentKey,
+      label: segmentLabel,
+      color: customTextColor,
+      backgroundColor: customBackgroundColor
+    } = segment;
 
-      const [backgroundColor, color] = adjustShade(baseColor, 100 - Math.min(100, getPercent(value, largetsSegmentValue)))
+    const [backgroundColor, color] = adjustShade(baseColor, 100 - Math.min(100, getPercent(value, largetsSegmentValue)))
 
-      return {
-          section: key,
-          value,
-          label,
-          segmentLabel,
-          segmentKey,
-          backgroundColor: customBackgroundColor ?? backgroundColor,
-          color: customTextColor ?? color
-      }
+    return {
+      section: key,
+      value,
+      label,
+      segmentLabel,
+      segmentKey,
+      backgroundColor: customBackgroundColor ?? backgroundColor,
+      color: customTextColor ?? color
+    }
   });
 
   const item = {
-      key,
-      values
+    key,
+    values
   }
 
   values.forEach((value) => {
-      value.parent = item
+    value.parent = item
   })
 
   return item
@@ -284,23 +284,6 @@ class MakkoChart {
       .style('stroke', '#CECECE')
       .attr('x2', width - margin * 3)
       .attr('transform', () => 'translate(' + 0 + ',' + y(1) + ')');
-
-    // add y-axis ticks.
-    const ytick = svg
-      .selectAll('.y')
-      .data(y.ticks(10))
-      .enter()
-      .append('svg:g')
-      .attr('class', 'y')
-      .attr('transform', (d) => 'translate(0,' + y(1 - d) + ')');
-
-    ytick
-      .append('svg:text')
-      .attr('x', -15)
-      .attr('text-anchor', 'end')
-      .attr('class', 'y-text')
-      .attr('dy', '.35em')
-      .text(p);
 
     // add columns.
     const sectionsData = svg
